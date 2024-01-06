@@ -22,14 +22,20 @@ class ContextManager(object):
         return self.response
     
     def doPost(self):
-        self.response = requests.post(url=self.url, data=json.dumps(self.data), headers=self.header)
-        print(self.response.content)
-        print(self.response)
+        try:
+            self.response = requests.post(url=self.url, data=json.dumps(self.data), headers=self.header)
+            print(self.response.content)
+        except Exception as e:
+            print(e)
+        return self.response
 
     def doPut(self):
-        raise Error("to be implemented!")
-        self.response = requests.put(url=self.url, data=json.dumps(self.data), headers=self.header)
-        print(self.response.content)
+        try:
+            self.response = requests.put(url=self.url, data=json.dumps(self.data), headers=self.header)
+            print(self.response.content)
+        except Exception as e:
+            print(e)
+        return self.response
         
     def doGet(self):
         getUrl = self.url + "/" + self.id
@@ -37,8 +43,11 @@ class ContextManager(object):
                 "Fiware-Service" : self.fiware_service,
                 "Fiware-ServicePath": self.fiware_service_path
             }
-        self.response = requests.get(url=getUrl, headers=getHeader)
-        print(self.response.content)
+        try:
+            self.response = requests.get(url=getUrl, headers=getHeader)
+        except Exception as e:
+            print(e)
+        return self.response
         
     def doDelete(self):
         deleteUrl = self.url + "/" + self.id + "/"
@@ -46,10 +55,16 @@ class ContextManager(object):
                         "Fiware-Service" : self.fiware_service,
                         "Fiware-ServicePath": self.fiware_service_path
                     }
-        self.response = requests.delete(url=deleteUrl, headers=deleteHeader)
-        print(self.response.content)
+        try:
+            self.response = requests.delete(url=deleteUrl, headers=deleteHeader)
+        except Exception as e:
+            print(e)
+        return self.response
 
     def doPatch(self, attr):
         patchUrl = self.url +"/" + self.id + "/attrs/"
-        self.response = requests.patch(url=patchUrl, data=json.dumps(attr), headers=self.header)
-        print(self.response.content)
+        try:
+            self.response = requests.patch(url=patchUrl, data=json.dumps(attr), headers=self.header)
+        except Exception as e:
+            print(e)
+        return self.response

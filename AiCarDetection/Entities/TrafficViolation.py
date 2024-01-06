@@ -10,6 +10,13 @@ class TrafficViolation(ContextManager) :
         self.descr = "Description"
         self.seeAlso = [] # ref to onStreetParking
 
+    def getRefOnStreetParking(self):
+        return self.seeAlso
+
+    def setLocationFromPoints(self,x1,y1,x2,y2):
+        self.location = geojson.Point(coordinates=[(x1 + x2) / 2, (y1 + y2) / 2 ]) # this is the location in the frame
+
+    
     def getDictObj(self):
         jsString = { 
                 "id": self.id,
@@ -55,10 +62,3 @@ class TrafficViolation(ContextManager) :
                     }
             }
         return jsString
-
-   
-   
-obj = TrafficViolation()
-obj.id = "TrafficViolation1"
-#obj.setData(obj.getDictObj())
-#obj.doPost()

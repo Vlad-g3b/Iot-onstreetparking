@@ -36,10 +36,3 @@ class ParkingSpot(ContextManager) :
             }
        # print(json.dumps(jsString, indent=4))
         return jsString
-   
-   
-obj = ParkingSpot()
-obj.id = "ParkingSpot1"
-
-#obj.setData(obj.getDictObj())
-#obj.doPost()

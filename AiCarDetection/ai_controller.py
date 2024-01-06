@@ -2,41 +2,27 @@ import cv2
 import numpy as np
 import supervision as sv
 import ultralytics
+import time
 from ultralytics import YOLO
 from collections import defaultdict
 from supervision.geometry.core import Position
 from Entities.Car import Car
+from Entities.ParkingSpot import ParkingSpot
+from Entities.TrafficViolation import TrafficViolation
+from Entities.OnStreetParking import OnStreetParking
 
 dete = False
 previous_bbox = None
-stationary_threshold = 20
-frame_count = 20
 parked = []
 cars = {}
 time_between_checks = 10
 time_counter = 0
+
 def get_bbox_from_list(list_bbox, tracker_id):
     for bbox in list_bbox:
         if bbox[4] != None and bbox[4] == tracker_id:
             return bbox
     return None
-
-def is_stationary(previous_bbox, current_bbox, threshold):
-    parked = []
-    for prev_i in previous_bbox:
-        tracker_id = prev_i[4]
-        previous_pos = prev_i[0]
-        curr_i = get_bbox_from_list(current_bbox,tracker_id)
-        motion_speed = threshold
-        if curr_i :
-            current_pos = curr_i[0]
-            motion_speed = abs(current_pos[0] - previous_pos[0]) + abs(current_pos[1] - previous_pos[1])
-        if motion_speed < threshold:
-            print("is Stationary {0}".format(tracker_id))
-            parked.append(True)
-        else:
-            parked.append(False)
-    return parked
 
 def update_cars(detections :sv.Detections, prev_detection : sv.Detections, time_elapsed):
     global cars
@@ -60,7 +46,7 @@ def update_cars(detections :sv.Detections, prev_detection : sv.Detections, time_
 
 def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
     # detect
-    global previous_bbox ,time_counter, time_between_checks,parked
+    global previous_bbox ,time_counter, time_between_checks,parked, parking_site
     results = model(frame,verbose=False)[0]
     detections = sv.Detections.from_ultralytics(results)
     #detections = detections[detections.class_id == 2]
@@ -88,6 +74,18 @@ def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
             if cars[i].car_parked is True:
                 print("Notify cygnus for car #{0} parked:{1} ".format(cars[i].car_id, cars[i].car_parked))
                 #TODO define trafficViolation and push to context-broker
+                tf = TrafficViolation()
+                tf.id = "tf_" + str(cars[i].car_id) + "_" + str(parking_site.id) + str(time.localtime)# parking_site + timestamp to make it unique
+                tf.descr = "illegal parking for atleast {0}".format(cars[i].time_stationary)
+                tf.setLocationFromPoints(cars[i].car_position[0],cars[i].car_position[1],cars[i].car_position[2],cars[i].car_position[3])
+                tf.getRefOnStreetParking().append(parking_site)
+                tf.setData(tf.getDictObj())
+                parking_site.seeAlso.append(tf)
+                response = tf.doPost()
+                parking_site.setData(parking_site.getDictObj())
+                response_site = parking_site.doPatch(parking_site.getTrafficViolationRef())
+                print(response)
+
             list_to_pop.append(i)
         for i in list_to_pop:
             cars.pop(i)
@@ -105,12 +103,12 @@ def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
 
 
 # initiate polygon zone
-polygon = np.array([
-    [290 , 80],
-    [255, 205],
-    [315, 205],
-    [340, 90],
-])
+#polygon = np.array([
+#    [290 , 80],
+#    [255, 205],
+#    [315, 205],
+#    [340, 90],
+#])
 polygon = np.array([
     [522 , 202],
     [530, 703],
@@ -128,13 +126,18 @@ box_annotator = sv.BoundingBoxAnnotator()
 label_annotator = sv.LabelAnnotator()
 trace_annotator = sv.TraceAnnotator()
 cap = cv2.VideoCapture(video_path)
-# Loop through the video frames
 width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 print('width:  ', width)
 print('height: ', height)
-#TODO define ParkingSite and push to context-brocker
+parking_site = OnStreetParking()
+parking_site.id = "ParkingSite2"
+parking_site.setData(parking_site.getDictObj())
+response = parking_site.doPost()
+print(response)
 
+
+# Loop through the video frames
 while cap.isOpened():
     # Read a frame from the video
     success, frame = cap.read()

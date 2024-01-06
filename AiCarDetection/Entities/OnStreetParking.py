@@ -34,10 +34,11 @@ class OnStreetParking(ContextManager) :
             }
        # print(json.dumps(jsString, indent=4))
         return jsString
-   
-
-
-obj = OnStreetParking()
-obj.id = "Parking6"
-#obj.setData(obj.getDictObj())
-#obj.doPost()
+    def getTrafficViolationRef(self):
+        jsString = { 
+                "seeAlso": {
+                    "value" : self.seeAlso, 
+                    "type" : "array"
+                    }
+            }
+        return jsString
