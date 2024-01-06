@@ -5,6 +5,7 @@ AiCarDetection/output/
 runs/
 docker/
 other/
+test.py
 *.pt
 # Byte-compiled / optimized / DLL files
 __pycache__/
