@@ -2,8 +2,8 @@
 
 class Car():
     
-    MAX_TIME_STATIONARY = 1
-    STATIONARY_THRESHOLD = 20
+    MAX_TIME_STATIONARY = 5
+    STATIONARY_THRESHOLD = 10
     
     def __init__(self):
         self.car_id = None
@@ -43,8 +43,8 @@ class Car():
         self.car_position = car_position
         self.car_previous_position = car_previous_position
         self.time_elapsed_feed = time_elapsed
-        self.car_parked = False
+        self.server_notified = None
         self.checkTime()
-       
+               
     def __str__ (self):
         return "car_id={0} ; car_parked={1} ; car_position:{2};".format(self.car_id, self.car_parked, self.car_position)
