@@ -2,10 +2,10 @@ import requests
 import json
 
 class ContextManager(object):
-    def __init__(self, id, type):
+    def __init__(self, _id, _type):
         self.data = None
-        self.id = None
-        self.type = None
+        self.id = _id
+        self.type = _type
         self.response = None
         self.fiware_service = "patras_onstreetparking"
         self.fiware_service_path = "/"

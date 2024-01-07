@@ -3,6 +3,8 @@ import numpy as np
 import supervision as sv
 import ultralytics
 import time
+import calendar
+
 from ultralytics import YOLO
 from collections import defaultdict
 from supervision.geometry.core import Position
@@ -72,19 +74,20 @@ def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
         list_to_pop = []
         for i in cars:
             if cars[i].car_parked is True:
+                current_GMT = time.gmtime()
+                time_stamp = calendar.timegm(current_GMT)
                 print("Notify cygnus for car #{0} parked:{1} ".format(cars[i].car_id, cars[i].car_parked))
-                #TODO define trafficViolation and push to context-broker
                 tf = TrafficViolation()
-                tf.id = "tf_" + str(cars[i].car_id) + "_" + str(parking_site.id) + str(time.localtime)# parking_site + timestamp to make it unique
+                tf.id = "tf_" + str(cars[i].car_id) + "_" + str(parking_site.id) + str(time_stamp)# parking_site + timestamp to make it unique
                 tf.descr = "illegal parking for atleast {0}".format(cars[i].time_stationary)
                 tf.setLocationFromPoints(cars[i].car_position[0],cars[i].car_position[1],cars[i].car_position[2],cars[i].car_position[3])
-                tf.getRefOnStreetParking().append(parking_site)
+                tf.getRefOnStreetParking().append(parking_site.id)
                 tf.setData(tf.getDictObj())
-                parking_site.seeAlso.append(tf)
                 response = tf.doPost()
+                
+                parking_site.getRefTrafficViolation().append(tf.id)
                 parking_site.setData(parking_site.getDictObj())
                 response_site = parking_site.doPatch(parking_site.getTrafficViolationRef())
-                print(response)
 
             list_to_pop.append(i)
         for i in list_to_pop:
@@ -131,7 +134,10 @@ height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 print('width:  ', width)
 print('height: ', height)
 parking_site = OnStreetParking()
-parking_site.id = "ParkingSite2"
+
+current_GMT = time.gmtime()
+time_stamp = calendar.timegm(current_GMT)
+parking_site.id = "ParkingSite_" + str(time_stamp)
 parking_site.setData(parking_site.getDictObj())
 response = parking_site.doPost()
 print(response)

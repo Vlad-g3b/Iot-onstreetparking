@@ -34,6 +34,8 @@ class OnStreetParking(ContextManager) :
             }
        # print(json.dumps(jsString, indent=4))
         return jsString
+    def getRefTrafficViolation(self):
+        return self.seeAlso
     def getTrafficViolationRef(self):
         jsString = { 
                 "seeAlso": {
