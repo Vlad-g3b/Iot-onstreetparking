@@ -5,8 +5,20 @@ AiCarDetection/output/
 runs/
 docker/
 other/
-test.py
+AiCarDetection/test2.py
+containers_ips.png
 *.pt
+.DS_Store
+node_modules
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

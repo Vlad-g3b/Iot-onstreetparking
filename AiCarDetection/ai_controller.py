@@ -4,7 +4,7 @@ import supervision as sv
 import ultralytics
 import time
 import calendar
-
+import requests
 from ultralytics import YOLO
 from collections import defaultdict
 from supervision.geometry.core import Position
@@ -12,6 +12,8 @@ from Entities.Car import Car
 from Entities.ParkingSpot import ParkingSpot
 from Entities.TrafficViolation import TrafficViolation
 from Entities.OnStreetParking import OnStreetParking
+from queue import Empty, Queue
+from threading import Thread
 
 dete = False
 previous_bbox = None
@@ -45,10 +47,21 @@ def update_cars(detections :sv.Detections, prev_detection : sv.Detections, time_
         parked.append(car.car_parked)
     return parked
 
+def consumer(queue):
+    while True:
+        try:
+            item = queue.get()
+        except Empty:
+            continue
+        else:
+            print(f'Processing request item {item}')
+            response = item.doPost()
+            time.sleep(4)
+            queue.task_done()
 
 def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
     # detect
-    global previous_bbox ,time_counter, time_between_checks,parked, parking_site
+    global previous_bbox ,time_counter, time_between_checks,parked, parking_site, queue
     results = model(frame,verbose=False)[0]
     detections = sv.Detections.from_ultralytics(results)
     #detections = detections[detections.class_id == 2]
@@ -72,6 +85,9 @@ def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
         time_counter = time_counter + time_between_checks
         #send a notification to cygnus when a car is found parked
         list_to_pop = []
+        session = requests.Session()
+        session.headers.update(parking_site.header)
+        notify = False
         for i in cars:
             if cars[i].car_parked is True:
                 current_GMT = time.gmtime()
@@ -83,13 +99,16 @@ def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
                 tf.setLocationFromPoints(cars[i].car_position[0],cars[i].car_position[1],cars[i].car_position[2],cars[i].car_position[3])
                 tf.getRefOnStreetParking().append(parking_site.id)
                 tf.setData(tf.getDictObj())
-                response = tf.doPost()
-                
+                queue.put(tf)
+                #response = tf.doPost()
                 parking_site.getRefTrafficViolation().append(tf.id)
-                parking_site.setData(parking_site.getDictObj())
-                response_site = parking_site.doPatch(parking_site.getTrafficViolationRef())
+                notify=True
 
-            list_to_pop.append(i)
+        if notify:
+            parking_site.setData(parking_site.getDictObj())
+            response_site = parking_site.doPatch(parking_site.getTrafficViolationRef())
+                
+        list_to_pop.append(i)
         for i in list_to_pop:
             cars.pop(i)
 
@@ -141,8 +160,10 @@ parking_site.id = "ParkingSite_" + str(time_stamp)
 parking_site.setData(parking_site.getDictObj())
 response = parking_site.doPost()
 print(response)
-
-
+#Create a queue for notifications
+queue = Queue()
+consumer_thread = Thread(target=consumer,args=(queue,),daemon=True)
+consumer_thread.start()
 # Loop through the video frames
 while cap.isOpened():
     # Read a frame from the video
@@ -156,13 +177,14 @@ while cap.isOpened():
             break
         # Break the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord("q"):
+            
             break
         # Break the loop if 'q' is pressed
 
     else:
         # Break the loop if the end of the video is reached
         break
-
+queue.join()
 # Release the video capture object and close the display window
 cap.release()
 cv2.destroyAllWindows()

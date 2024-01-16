@@ -15,6 +15,8 @@ class ContextManager(object):
         "Fiware-Service" : self.fiware_service ,
         "Fiware-ServicePath": self.fiware_service_path
         }
+        self.session = None
+        
     def setData(self, data):
         self.data = data
 
@@ -24,15 +26,23 @@ class ContextManager(object):
     def doPost(self):
         try:
             self.response = requests.post(url=self.url, data=json.dumps(self.data), headers=self.header)
-            print(self.response.content)
         except Exception as e:
             print(e)
         return self.response
 
+    def doPostInSession(self ,session : requests.Session):
+        try:
+           
+            response : requests.Response
+            response = session.post(url=self.url, json=json.dumps(self.data))
+            self.response = response
+            print(response.content)
+        except Exception as e:
+            print(e)
+        return self.response
     def doPut(self):
         try:
             self.response = requests.put(url=self.url, data=json.dumps(self.data), headers=self.header)
-            print(self.response.content)
         except Exception as e:
             print(e)
         return self.response
@@ -65,6 +75,7 @@ class ContextManager(object):
         patchUrl = self.url +"/" + self.id + "/attrs/"
         try:
             self.response = requests.patch(url=patchUrl, data=json.dumps(attr), headers=self.header)
+            print(self.response.content)
         except Exception as e:
             print(e)
         return self.response
