@@ -1,12 +1,16 @@
 import json
 from Entities.ContextManager import ContextManager
 import geojson
-
+# Google Maps coordinates
+# 1 Point 38.24345365877684, 21.732097598848988
+# 2 Point 38.24343838611503, 21.732119727073147
+# 3 Point 38.24396843560099, 21.73279791804642
+# 4 Point 38.24398974043434, 21.732766772558346
 class OnStreetParking(ContextManager) :
     
     def __init__(self):
         super().__init__("","OnStreetParking") 
-        self.location = geojson.Polygon(coordinates=[[geojson.Point(coordinates=[1,1]),geojson.Point(coordinates=[1,1]),geojson.Point(coordinates=[1,1]),geojson.Point(coordinates=[1,1])]])
+        self.location = geojson.Polygon(coordinates=[[geojson.Point(coordinates=[38.24345365877684, 21.732097598848988]),geojson.Point(coordinates=[38.24343838611503, 21.732119727073147]),geojson.Point(coordinates=[38.24396843560099, 21.73279791804642]),geojson.Point(coordinates=[38.24398974043434, 21.732766772558346])]])
         self.totalSpotNumber = 0
         self.refParkingSpots = []
         self.seeAlso = []

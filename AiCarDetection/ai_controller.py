@@ -22,6 +22,7 @@ cars = {}
 time_between_checks = 10
 time_counter = 0
 
+
 def get_bbox_from_list(list_bbox, tracker_id):
     for bbox in list_bbox:
         if bbox[4] != None and bbox[4] == tracker_id:
@@ -54,9 +55,9 @@ def consumer(queue):
         except Empty:
             continue
         else:
-            print(f'Processing request item {item}')
+            print(f'Processing request item {item.getDictObj()}')
             response = item.doPost()
-            time.sleep(4)
+            time.sleep(12)
             queue.task_done()
 
 def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
@@ -94,8 +95,9 @@ def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
                 time_stamp = calendar.timegm(current_GMT)
                 print("Notify cygnus for car #{0} parked:{1} ".format(cars[i].car_id, cars[i].car_parked))
                 tf = TrafficViolation()
-                tf.id = "tf_" + str(cars[i].car_id) + "_" + str(parking_site.id) + str(time_stamp)# parking_site + timestamp to make it unique
+                tf.id = "IllegalParking_" + str(cars[i].car_id) + "_" + str(parking_site.id) + "_" + str(time_stamp)# parking_site + timestamp to make it unique
                 tf.descr = "illegal parking for atleast {0}".format(cars[i].time_stationary)
+                #location in video
                 tf.setLocationFromPoints(cars[i].car_position[0],cars[i].car_position[1],cars[i].car_position[2],cars[i].car_position[3])
                 tf.getRefOnStreetParking().append(parking_site.id)
                 tf.setData(tf.getDictObj())
@@ -103,12 +105,13 @@ def process_frame_tracking(frame: np.ndarray, time_elapsed) -> np.ndarray:
                 #response = tf.doPost()
                 parking_site.getRefTrafficViolation().append(tf.id)
                 notify=True
+                list_to_pop.append(i)
+                
 
         if notify:
             parking_site.setData(parking_site.getDictObj())
             response_site = parking_site.doPatch(parking_site.getTrafficViolationRef())
                 
-        list_to_pop.append(i)
         for i in list_to_pop:
             cars.pop(i)
 
@@ -177,7 +180,6 @@ while cap.isOpened():
             break
         # Break the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord("q"):
-            
             break
         # Break the loop if 'q' is pressed
 

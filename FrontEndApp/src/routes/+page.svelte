@@ -5,14 +5,18 @@
      * @type {any[]}
      */
     let eventData = [];
-   
+    let cnt = 0;
     onMount(() => {
       const eventSource = new EventSource('http://172.17.0.7:5000/sse');
       eventSource.onmessage = (event) => {
         // Handle incoming SSE data
-        console.log(event.data)
+        
         const data = JSON.parse(event.data);
-        eventData = [...eventData, data];
+        const item = JSON.parse(data.data);
+        item['id'] = cnt 
+        cnt += 1 
+        console.log(item)
+        eventData = [...eventData, item];
       };
   
       eventSource.onerror = (error) => {
@@ -32,7 +36,7 @@
     <h1>Server-Sent Events</h1>
     <ul>
       {#each eventData as event (event.id)}
-        <li>{event.data}</li>
+        <li>{JSON.stringify(event.data[0])}</li>
       {/each}
     </ul>
   </div>
