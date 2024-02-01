@@ -9,6 +9,7 @@ import logging
 import sys
 import asyncio
 import json
+from random import randint
 
 class SSEManager:
     def __init__(self):
@@ -45,9 +46,28 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.info('API is starting up')
 
+# Function to generate fake data
+async def generate_fake_data():
+    while True:
+        # Generate fake data (replace this with your actual data generation logic)
+        value={"id": "ID_"+str(randint(1000000000,9999999999)), "type": "TrafficViolation", "location": {"value": {"type": "Point", "coordinates": [100, 100 ]}, "type": "GeoProperty"}, "description": {"type": "String", "value": "Illegal parking"}, "seeAlso": {"value": [], "type": "array"}}
+
+        fake_item = {"data":[value]}
+        yield f"data: {json.dumps(fake_item)}\n\n"
+        await asyncio.sleep(randint(1, 10))  # Sleep for 1 second
+
+# Define an endpoint to stream fake data
+@app.get("/sseFake")
+async def stream_fake_data(request: Request):
+    async def fake_data_generator():
+        async for item in generate_fake_data():
+            yield item
+
+    return StreamingResponse(fake_data_generator(), media_type="text/event-stream")
+
+
 async def get_body(request: Request):
     return await request.body()
-
 
 
 @app.post("/notify")
@@ -71,7 +91,7 @@ async def sse_generator():
             yield f"data: {json.dumps(message)}\n\n"
         await asyncio.sleep(1)
     # Adjust the sleep interval as needed
-    
+
 @app.get("/sse", response_class=StreamingResponse)
 async def sse_endpoint(request: Request):
     response = StreamingResponse(sse_generator(), media_type="text/event-stream")
@@ -83,5 +103,5 @@ async def sse_endpoint(request: Request):
 
 
 # when you want to run in on the host
-#if __name__ == "__main__":
-#    uvicorn.run("main:app", port=5000, log_level="info")
+if __name__ == "__main__": 
+   uvicorn.run("main:app", port=5000, log_level="info")
