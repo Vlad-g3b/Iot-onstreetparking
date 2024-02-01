@@ -7,12 +7,14 @@
     let eventData = [];
     let cnt = 0;
     onMount(() => {
-      const eventSource = new EventSource('http://172.17.0.7:5000/sse');
+      const eventSource = new EventSource('http://127.0.0.1:5000/sseFake');
       eventSource.onmessage = (event) => {
         // Handle incoming SSE data
+        console.log(event)
         
         const data = JSON.parse(event.data);
-        const item = JSON.parse(data.data);
+        // const item = JSON.parse(data.data);
+        const item = data
         item['id'] = cnt 
         cnt += 1 
         console.log(item)
