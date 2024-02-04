@@ -1,22 +1,13 @@
-<script>
+<script lang="ts">
     import { onMount } from "svelte";
     import "leaflet/dist/leaflet.css";
-
-    /**
-     * @type {number}
-     */
-    export let latitude;
-    /**
-     * @type {number}
-     */
-    export let longitude;
+    import type L from "leaflet";
     
-    /**
-     * @type {import("svelte/store").Writable<object>}
-     */
-    export let infractionsStore; // Declare a prop for the infractions store
+    export let latitude : number;
+    export let longitude: number;
+    export let infractionsStore: import("svelte/store").Writable<Array<object>>;
 
-    let map;
+    let map: L.Map;
 
     onMount(() => {
         if (typeof window !== "undefined") {
@@ -42,15 +33,36 @@
 
                         // Add markers for each infraction
                         infractions.forEach((infraction) => {
-                            L.marker([
+                            let marker = L.marker([
                                 infraction.location.value.coordinates[0],
                                 infraction.location.value.coordinates[1],
                             ])
                                 .addTo(map)
-                                .bindPopup("infraction.description");
+                                .bindPopup(
+                                    `<button class="remove-marker-btn" data-marker-id="${infraction.id}">Remove Marker</button>`,
+                                );
+
+                            // Store infraction ID in marker for identification
+                            marker.infractionId = infraction.id;
                         });
                     },
                 );
+
+                // Handle click event for remove marker button
+                document.addEventListener("click", function (event) {
+                    if (event.target.classList.contains("remove-marker-btn")) {
+                        const markerId = event.target.dataset.markerId;
+                        // Find and remove marker from map
+                        Object.values(map._layers).forEach((layer) => {
+                            if (
+                                layer instanceof L.Marker &&
+                                layer.infractionId === markerId
+                            ) {
+                                map.removeLayer(layer);
+                            }
+                        });
+                    }
+                });
 
                 // Unsubscribe from the store when component is destroyed
                 return unsubscribe;
@@ -63,6 +75,6 @@
 
 <style>
     #map {
-        height: 100vh;
+        height: 100%;
     }
 </style>

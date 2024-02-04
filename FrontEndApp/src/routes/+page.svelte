@@ -35,8 +35,8 @@
   </script>
   
   <div>
-    <h1>Server-Sent Events</h1>
-    <ul>
+    <h1>test</h1>
+      <ul>
       {#each eventData as event (event.id)}
         <li>{JSON.stringify(event.data[0])}</li>
       {/each}
