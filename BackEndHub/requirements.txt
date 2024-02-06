@@ -5,3 +5,5 @@ PyYAML>=6.0
 sse-starlette>=1.8.2
 asyncio>=3.4.3
 shapely>=2.0.2
+mysql-connector-python>=8.3.0
+ConfigParser>=6.0.0 

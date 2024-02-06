@@ -5,6 +5,7 @@ from fastapi import Request, Depends,HTTPException
 from sse_starlette.sse import EventSourceResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from app.Services.MainService import MainService
 import logging
 import sys
 import asyncio
@@ -30,8 +31,9 @@ app = FastAPI()
 STREAM_DELAY = 10  # second
 RETRY_TIMEOUT = 15000  # milisecond
 cnt = 0
-
 data_to_be_sent = None
+
+list_of_data_to_be_sent = []
 
 app.add_middleware(
     CORSMiddleware,
@@ -49,26 +51,46 @@ async def get_body(request: Request):
     return await request.body()
 
 
+@app.get("/getAllTrafficViolation")
+def getDataFromDb():
+    ms = MainService()
+    list_records = ms.getTrafficViolationList() 
+    logger.debug(list_records)
+    return {'TrafficViolationList' : list_records}
 
 @app.post("/notify")
 def getDataFromContextBroker(body: bytes = Depends(get_body)):
-   global data_to_be_sent
-   data_to_be_sent = body.decode('utf8')
-   logger.info(data_to_be_sent)
-   return body
+    global data_to_be_sent, list_of_data_to_be_sent
+    data_to_be_sent = body.decode('utf8')
+    list_of_data_to_be_sent.append(data_to_be_sent)
+    logger.debug("HERE")
+    logger.info(data_to_be_sent)
+    ms = MainService()
+    data_to_insert = json.loads(data_to_be_sent)['data']
+    logger.debug(data_to_insert)
+    data_to_insert = data_to_insert[0]
+    logger.debug(data_to_insert)
+    if data_to_insert['type'] == 'TrafficViolation':
+        try:
+            ms.insertTrafficViolation(data_to_insert['id'], data_to_insert['description']['value'],json.dumps(data_to_insert['location']['value']), json.dumps(data_to_insert['seeAlso']['value'][0]))
+        except Exception as e:
+            print(e)
+            #TODO: maybe do something later...
 
+    return body
 
 
 async def sse_generator():
     global data_to_be_sent, cnt
     while True:
-        if data_to_be_sent is not None:
-            cnt = cnt + 1
-            message = {'id': cnt,
-                    'data': 'data_body'}
-            message['data'] = data_to_be_sent
-            data_to_be_sent = None
-            yield f"data: {json.dumps(message)}\n\n"
+        if len(list_of_data_to_be_sent) != 0 :
+            item = list_of_data_to_be_sent.pop()
+            if item is not None:
+                cnt = cnt + 1
+                message = {'id': cnt,
+                        'data': 'data_body'}
+                message['data'] = item
+                yield f"data: {json.dumps(message)}\n\n"
         await asyncio.sleep(1)
     # Adjust the sleep interval as needed
     
@@ -78,10 +100,3 @@ async def sse_endpoint(request: Request):
     sse_manager.add_subscription(response)
     logger.info(len(sse_manager.subscriptions))
     return response
-
-
-
-
-# when you want to run in on the host
-#if __name__ == "__main__":
-#    uvicorn.run("main:app", port=5000, log_level="info")
