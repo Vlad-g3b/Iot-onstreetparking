@@ -6,7 +6,7 @@
     const infractionsStore = writable([]);
 
     onMount(() => {
-        const eventSource = new EventSource("http://127.0.0.1:5000/sseFake");
+        const eventSource = new EventSource("http://172.17.0.7:5000/sse");
         eventSource.onmessage = (event) => {
             // Handle incoming SSE data
 

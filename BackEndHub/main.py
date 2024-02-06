@@ -86,6 +86,30 @@ def getDataFromContextBroker(body: bytes = Depends(get_body)):
 
 async def sse_generator():
     global data_to_be_sent, cnt
+    deb = False
+    if deb is True:
+        while True:
+            num_items = randint(1, 3)  # Generate a random number of items
+            values = []
+            for _ in range(num_items):
+                value={"id": "ID_"+str(randint(1000000000,9999999999)), "type": "TrafficViolation", "location": {"value": {"type": "Point", "coordinates": fake_coordinates[randint(0, len(fake_coordinates)-1)]}, "type": "GeoProperty"}, "description": {"type": "String", "value": "Illegal parking"}, "seeAlso": {"value": [], "type": "array"}}
+                values.append(value)
+            yield f"data: {json.dumps(values)}\n\n"
+            await asyncio.sleep(randint(1, 5))     
+    else:    
+        while True:
+            if len(list_of_data_to_be_sent) != 0 :
+                item = list_of_data_to_be_sent.pop()
+                if item is not None:
+                    cnt = cnt + 1
+                    #message = {'id': cnt,'data': 'data_body'}
+                    #message['data'] = item
+                    #yield f"data: {json.dumps(message)}\n\n"
+                    item = json.loads(item)['data']
+                    yield f"data: {json.dumps(item)}\n\n"
+            await asyncio.sleep(1)
+        # Adjust the sleep interval as needed
+    
 # Function to generate fake data
 async def generate_fake_data():
     while True:
@@ -111,16 +135,6 @@ async def stream_fake_data(request: Request):
 """
 if __name__ == "__main__":
     uvicorn.run("main:app", port=5000, log_level="info")
-    if len(list_of_data_to_be_sent) != 0 :
-        item = list_of_data_to_be_sent.pop()
-        if item is not None:
-            cnt = cnt + 1
-            message = {'id': cnt,
-                    'data': 'data_body'}
-            message['data'] = item
-            yield f"data: {json.dumps(message)}\n\n"
-    await asyncio.sleep(1)
-    # Adjust the sleep interval as needed
 """    
 @app.get("/sse", response_class=StreamingResponse)
 async def sse_endpoint(request: Request):
