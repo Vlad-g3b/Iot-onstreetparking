@@ -1,15 +1,33 @@
 from typing import Union
 import uvicorn
 from fastapi import FastAPI
-from fastapi import Request
+from fastapi import Request, Depends,HTTPException
+from sse_starlette.sse import EventSourceResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from app.Services.MainService import MainService
 import logging
 import asyncio
 import json
+import sys
+
 from random import randint
 
+class SSEManager:
+    def __init__(self):
+        self.subscriptions = []
+
+    def add_subscription(self, response):
+        self.subscriptions.append(response)
+
+    def remove_subscription(self, response):
+        self.subscriptions.remove(response)
+
+    async def broadcast_message(self, message: dict):
+        for response in self.subscriptions:
+            await response.send_text(f"data: {json.dumps(message)}\n\n")
+
+sse_manager = SSEManager()
 app = FastAPI()
 
 STREAM_DELAY = 10  # second
@@ -90,6 +108,7 @@ async def stream_fake_data(request: Request):
 
 
 # when you want to run in on the host
+"""
 if __name__ == "__main__":
     uvicorn.run("main:app", port=5000, log_level="info")
     if len(list_of_data_to_be_sent) != 0 :
@@ -102,7 +121,7 @@ if __name__ == "__main__":
             yield f"data: {json.dumps(message)}\n\n"
     await asyncio.sleep(1)
     # Adjust the sleep interval as needed
-    
+"""    
 @app.get("/sse", response_class=StreamingResponse)
 async def sse_endpoint(request: Request):
     response = StreamingResponse(sse_generator(), media_type="text/event-stream")
