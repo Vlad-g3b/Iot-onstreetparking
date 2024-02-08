@@ -12,7 +12,16 @@ Setup:
    </ul>
    How to install mysql into a docker container:
    <ul>
-     <li>  Use this link https://hub.docker.com/_/mysql</li>
-     <li>  Install MySql WorkBench https://dev.mysql.com/downloads/ (or use sqlplus ? from terminal) </li>
-     <li>  (better to) Create another user that will be put into the config.properties see this (https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-grant-permissions-in-mysql)</li>
+     <li> Use this link https://hub.docker.com/_/mysql</li>
+     <li> Install MySql WorkBench https://dev.mysql.com/downloads/ (or use sqlplus ? from terminal) </li>
+     <li> (better to) Create another user that will be put into the config.properties see this (https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-grant-permissions-in-mysql)</li>
+   </ul>
+   How to import the sql file for workbench :
+   <ul>
+     <li> Under Server Administration on the Home window select the server instance you want to restore database to (Create New Server Instance if doing it first time).</li>
+     <li> Click on Manage Import/Export</li>
+     <li> Click on Data Import/Restore on the left side of the screen.</li>
+     <li> Select Import from Self-Contained File radio button (right side of screen)</li>
+     <li> Select the path of .sql</li>
+     <li> Click Start Import button at the right bottom corner of window.</li>
   </ul>
