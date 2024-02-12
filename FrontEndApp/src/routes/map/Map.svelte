@@ -1,7 +1,10 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import "leaflet/dist/leaflet.css";
-    import type L from "leaflet";
+    import { onMount } from 'svelte';
+    import L from 'leaflet' ;
+    import 'leaflet/dist/leaflet.css';
+    import 'leaflet.heat';
+    //import 'leaflet.heat/dist/leaflet-heat.js';
+
     
     export let latitude : number;
     export let longitude: number;
@@ -20,7 +23,15 @@
                         attribution: "&copy; OpenStreetMap contributors",
                     },
                 ).addTo(map);
+                import("leaflet.heat").then(() => {
+                    var heat2 = L.heatLayer([
+                    [38.248747, 21.738999, 0.5],
+                    [38.248747, 21.738999, 0.5],
+                    [38.248747, 21.738999, 4],
 
+                    [38.248747, 21.738999, 0.2],
+                    ], {radius: 25}).addTo(map);
+                });
                 // Subscribe to changes in the infractions store
                 const unsubscribe = infractionsStore.subscribe(
                     (infractions) => {

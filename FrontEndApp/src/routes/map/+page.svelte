@@ -1,11 +1,20 @@
 <script>
-    import Map from "./Map.svelte";
     import { onMount } from "svelte";
     import { writable } from 'svelte/store';
-
+    /**
+     * @type {typeof import("./Map.svelte").default}
+     */
+    let Map;
     const infractionsStore = writable([]);
-
+    
     onMount(() => {
+        if (typeof window !== 'undefined') {
+      import('./Map.svelte').then(module => {
+        Map = module.default;
+      }).catch(error => {
+        console.error('Error importing Map component:', error);
+      });
+    }
         const eventSource = new EventSource("http://172.17.0.7:5000/sse");
         eventSource.onmessage = (event) => {
             // Handle incoming SSE data
@@ -28,4 +37,8 @@
     });
 </script>
 
+{#if Map}
 <Map {infractionsStore} latitude={38.248747} longitude={21.738999} />
+{:else}
+  <p>Loading...</p>
+{/if}
