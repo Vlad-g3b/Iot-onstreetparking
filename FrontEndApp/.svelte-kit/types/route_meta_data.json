@@ -1,4 +1,8 @@
 {
 	"/": [],
-	"/map": []
+	"/live_feed": [],
+	"/map": [],
+	"/ps_list": [],
+	"/statistics": [],
+	"/tf_list": []
 }

@@ -10,7 +10,9 @@ const config = {
     adapter: adapter(),
   },
 
-  preprocess: [vitePreprocess({})],
+  preprocess: [vitePreprocess({optimizeDeps: {
+    exclude: ['layercake']
+},})],
 };
 
 export default config;

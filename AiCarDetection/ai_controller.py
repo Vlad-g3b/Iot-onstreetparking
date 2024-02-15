@@ -160,6 +160,7 @@ parking_site = OnStreetParking()
 current_GMT = time.gmtime()
 time_stamp = calendar.timegm(current_GMT)
 parking_site.id = "ParkingSite_" + str(time_stamp)
+parking_site.description = "Street-Korinthou"
 parking_site.setData(parking_site.getDictObj())
 response = parking_site.doPost()
 print(response)

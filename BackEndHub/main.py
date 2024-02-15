@@ -1,6 +1,7 @@
 from typing import Union
 import uvicorn
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi import Request, Depends,HTTPException
 from sse_starlette.sse import EventSourceResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +27,14 @@ class SSEManager:
     async def broadcast_message(self, message: dict):
         for response in self.subscriptions:
             await response.send_text(f"data: {json.dumps(message)}\n\n")
+
+class TrafficViolation(BaseModel):
+    tf_id: str
+    tf_type: str
+    description: str | None = None
+    location: list | None = None
+    is_resolved: float | None = None
+
 
 sse_manager = SSEManager()
 app = FastAPI()
@@ -62,21 +71,53 @@ def getDataFromDb():
     logger.debug(list_records)
     return {'TrafficViolationList' : list_records}
 
+@app.get("/getAllUnresolvedTrafficViolation")
+def getDataFromDb2():
+    ms = MainService()
+    list_records = ms.getTrafficViolationListUnresolved() 
+    logger.debug(list_records)
+    return {'TrafficViolationList' : list_records}
+
+@app.get("/getStats")
+def getDataFromDb2():
+    ms = MainService()
+    list_records = ms.getTrafficViolationStats() 
+    logger.debug(list_records)
+    return {'TrafficViolationStats' : list_records}
+
+@app.get("/getAllTParkingSites")
+def getDataFromDb():
+    ms = MainService()
+    list_records = ms.getParkingSiteList() 
+    logger.debug(list_records)
+    return {'ParkingSiteList' : list_records}
+
+@app.post("/updateResolved")
+def updateTFResolved(tf : TrafficViolation):
+    ms = MainService()
+    ms.updateTFResolved(tf.tf_id, tf.is_resolved) 
+    logger.debug(tf)
+    return tf
+
 @app.post("/notify")
 def getDataFromContextBroker(body: bytes = Depends(get_body)):
     global data_to_be_sent, list_of_data_to_be_sent
     data_to_be_sent = body.decode('utf8')
     list_of_data_to_be_sent.append(data_to_be_sent)
-    logger.debug("HERE")
     logger.info(data_to_be_sent)
     ms = MainService()
     data_to_insert = json.loads(data_to_be_sent)['data']
-    logger.debug(data_to_insert)
     data_to_insert = data_to_insert[0]
     logger.debug(data_to_insert)
     if data_to_insert['type'] == 'TrafficViolation':
         try:
-            ms.insertTrafficViolation(data_to_insert['id'], data_to_insert['description']['value'],json.dumps(data_to_insert['location']['value']), json.dumps(data_to_insert['seeAlso']['value'][0]))
+            ms.insertTrafficViolation(data_to_insert['id'], data_to_insert['description']['value'],json.dumps(data_to_insert['location']['value']['coordinates']), json.dumps(data_to_insert['seeAlso']['value'][0]))
+        except Exception as e:
+            print(e)
+            #TODO: maybe do something later...
+    if data_to_insert['type'] == 'OnStreetParking':
+        try:
+            ms.insertOnStreetParking(data_to_insert['id'], data_to_insert['description']['value'],json.dumps(data_to_insert['location']['value']['coordinates']), json.dumps(data_to_insert['totalSpotNumber']['value']))
         except Exception as e:
             print(e)
             #TODO: maybe do something later...

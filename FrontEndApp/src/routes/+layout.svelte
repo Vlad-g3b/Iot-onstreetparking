@@ -1,5 +1,6 @@
 <script>
     import "./styles.css"
+    import { SvelteToast } from '@zerodevx/svelte-toast'
 </script>
 
 <style>
@@ -24,7 +25,11 @@
     color: var(--sidebar-text-color);
     padding: 20px;
   }
-
+  .footer {
+    background-color: var(--sidebar-bg-color);
+    color: var(--sidebar-text-color);
+    padding: 20px;
+  }
   .sidebar h2 {
     margin-bottom: 20px;
   }
@@ -57,6 +62,7 @@
     color: var(--content-text-color);
     padding: 20px;
     transition: margin-left var(--transition-speed);
+    overflow: auto;
   }
 
   @media screen and (max-width: 768px) {
@@ -74,14 +80,18 @@
     }
   }
 </style>
-
+<SvelteToast />
 <div class="container">
   <!-- Sidebar -->
   <div class="sidebar">
     <h2>Navigation</h2>
     <ul>
-      <li><a href="/">Home</a></li>
       <li><a href="/map">Live map</a></li>
+      <li><a href="/live_feed">Live Feed</a></li>
+      <li><a href="/tf_list">Traffic Violations</a></li>
+      <li><a href="/ps_list">Parking Sites</a></li>
+      <li><a href="/statistics">Statistics</a></li>
+
     </ul>
   </div>
 
@@ -90,3 +100,7 @@
     <slot></slot>
   </div>
 </div>
+  
+<footer class="footer">
+  <p>&copy; 2022 OnStreetParking. All rights reserved.</p>
+</footer>

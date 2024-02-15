@@ -6,7 +6,16 @@
      */
     let Map;
     const infractionsStore = writable([]);
-    
+    async function getListItems() {
+    const res = await fetch('http://172.17.0.7:5000/getAllUnresolvedTrafficViolation');
+      if (res.ok) {
+          return await res.text();
+      } else {
+          // Sometimes the API will fail!
+          throw new Error('Request failed');
+      }
+    }
+
     onMount(() => {
         if (typeof window !== 'undefined') {
       import('./Map.svelte').then(module => {
@@ -18,10 +27,10 @@
         const eventSource = new EventSource("http://172.17.0.7:5000/sse");
         eventSource.onmessage = (event) => {
             // Handle incoming SSE data
-
             const infractions = JSON.parse(event.data);
-            console.log(infractions)
-            infractionsStore.set(infractions);
+            const infractionsTF = infractions.filter(item => item.type == 'TrafficViolation')
+            infractionsStore.set(infractionsTF);
+            console.log(infractionsTF);
         };
 
         eventSource.onerror = (error) => {
@@ -37,8 +46,16 @@
     });
 </script>
 
-{#if Map}
-<Map {infractionsStore} latitude={38.248747} longitude={21.738999} />
-{:else}
-  <p>Loading...</p>
-{/if}
+
+
+{#await getListItems()}
+	<p>...waiting</p>
+{:then list}
+  {#if Map}
+    <Map {infractionsStore} {list} latitude={38.248747} longitude={21.738999} />
+  {:else}
+    <p>Loading...</p>
+  {/if}
+{:catch error}
+	<p style="color: red">{error.message}</p>
+{/await}
