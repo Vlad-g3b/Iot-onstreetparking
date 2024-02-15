@@ -62,3 +62,4 @@ also you have install ultralytics, numpy,cv2
 I used https://docs.ultralytics.com/quickstart/ I dont remember exactly how I made this to work on my pc :(
       </li>
    </ul>
+![image](https://github.com/Vlad-g3b/Iot-onstreetparking/assets/61354498/81de87bb-9117-4506-891c-f4d5373f34dc)
